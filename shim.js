@@ -2,44 +2,81 @@
 (function () {
   var C = window.PR_CONFIG || {};
   var store = {}, ver = 0, me = null, listeners = [], synced = false, writeSeq = 0, inflight = 0;
-  var local = {}, waiters = [], firstSync = null, syncing = null, code = '', pid = '';
-  var CKEY = 'pr.code', PKEY = 'pr.pid';
+  var local = {}, firstSync = null, syncing = null, code = '', pid = '', role = '';
+  var CKEY = 'pr.code', PKEY = 'pr.pid', RKEY = 'pr.role';
   function lsGet(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
   function lsSet(k, v) { try { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) {} }
 
-  /* ---------- access code + profile id ---------- */
-  code = lsGet(CKEY); pid = lsGet(PKEY);
+  /* ---------- three portals: Partner (team passcode), Admin (owner passcode), Guest (no passcode) ---------- */
+  code = lsGet(CKEY); pid = lsGet(PKEY); role = lsGet(RKEY);
+  if (['admin', 'partner', 'guest'].indexOf(role) < 0) role = '';
   if (!/^p[a-z0-9]{8,24}$/.test(pid)) { var a = new Uint8Array(12); crypto.getRandomValues(a); pid = 'p' + Array.prototype.map.call(a, function (b) { return (b % 36).toString(36); }).join(''); lsSet(PKEY, pid); }
-  var overlay = null;
-  function ui(msg) {
-    if (!overlay) {
-      overlay = document.createElement('div'); overlay.id = 'pr-login';
-      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:var(--bg,#EEF1EC);color:var(--ink,#14231D);display:grid;place-content:center;gap:14px;text-align:center;padding:24px;font-family:system-ui,sans-serif';
-      overlay.innerHTML = '<h1 style="margin:0;font-size:30px">Bahi-Khata Property</h1><p style="margin:0;color:var(--muted,#566860)">Enter the access code you were given.</p>' +
-        '<input id="pr-code" type="password" autocomplete="off" autocapitalize="off" placeholder="Access code" style="font-size:18px;padding:12px 14px;border-radius:10px;border:1px solid var(--line,#D3DACF);text-align:center;min-height:44px">' +
-        '<button id="pr-go" type="button" style="font-size:16px;font-weight:600;padding:12px;border:0;border-radius:10px;background:var(--pine,#2F5D4B);color:#fff;min-height:44px">Continue</button><p id="pr-err" style="margin:0;color:#A3362E;min-height:1em"></p>';
-      document.body.appendChild(overlay);
-      var go = function () { var v = document.getElementById('pr-code').value.trim(); if (!v) return; code = v; lsSet(CKEY, v); overlay.hidden = true; var w = waiters; waiters = []; w.forEach(function (f) { f(); }); };
-      document.getElementById('pr-go').addEventListener('click', go);
-      document.getElementById('pr-code').addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
-    }
-    overlay.hidden = false; document.getElementById('pr-err').textContent = msg || ''; document.getElementById('pr-code').value = '';
-    setTimeout(function () { var i = document.getElementById('pr-code'); if (i) i.focus(); }, 50);
-  }
-  function ensureCode(msg) {
-    if (code && !msg) return Promise.resolve();
-    return new Promise(function (res) { waiters.push(res); ui(msg); });
-  }
-
-  /* ---------- API ---------- */
+  if (!role && !code && /^#[pr]-[a-z0-9]+$/.test(location.hash)) { role = 'guest'; lsSet(RKEY, 'guest'); } // a shared property link opens as Guest
+  function authed() { return role === 'guest' || !!code; }
   function raw(body) {
     return fetch(C.API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); }, function () { var e = new Error('network'); e.code = 'network'; throw e; });
   }
-  function api(action, body, tries) {
-    tries = tries || 0;
-    return ensureCode().then(function () { return raw(Object.assign({ code: code, pid: pid, action: action }, body)); }).then(function (r) {
-      if (r && r.error === 'auth') { code = ''; lsSet(CKEY, ''); return ensureCode('That code was not accepted. Check it and try again.').then(function () { return api(action, body, tries + 1); }); }
-      if (r && (r.error === 'locked' || r.error === 'setup')) { ui(r.message); var e1 = new Error(r.message); e1.code = r.error; throw e1; }
+  var overlay = null;
+  function enter(r, c) { role = r; code = c || ''; lsSet(RKEY, r); lsSet(CKEY, code); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }
+  function portal(key, title, sub, color, needsCode) {
+    var card = document.createElement('div');
+    card.className = 'pr-card'; card.setAttribute('data-role', key);
+    card.style.cssText = 'flex:1 1 200px;min-width:0;max-width:320px;background:var(--surface,#fff);border:1px solid var(--line,#D3DACF);border-top:6px solid ' + color + ';border-radius:12px;padding:16px;display:grid;gap:10px;text-align:left;align-content:start';
+    var h2 = document.createElement('h2'); h2.textContent = title; h2.style.cssText = 'margin:0;font-size:20px;color:' + color;
+    var p = document.createElement('p'); p.textContent = sub; p.style.cssText = 'margin:0;font-size:13.5px;color:var(--muted,#566860)';
+    var err = document.createElement('p'); err.className = 'pr-err'; err.setAttribute('role', 'alert'); err.style.cssText = 'margin:0;color:#A3362E;font-size:13.5px;min-height:1em';
+    var btn = document.createElement('button'); btn.type = 'button'; btn.textContent = needsCode ? 'Enter as ' + title : 'Continue as Guest';
+    btn.style.cssText = 'font-size:15px;font-weight:600;padding:11px;border:0;border-radius:10px;background:' + color + ';color:#fff;min-height:44px';
+    card.appendChild(h2); card.appendChild(p);
+    var inp = null;
+    if (needsCode) {
+      inp = document.createElement('input'); inp.type = 'password'; inp.placeholder = title + ' passcode'; inp.setAttribute('aria-label', title + ' passcode'); inp.autocomplete = 'off'; inp.setAttribute('autocapitalize', 'off');
+      inp.style.cssText = 'font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line,#D3DACF);min-height:44px;width:100%;box-sizing:border-box;background:var(--bg,#fff);color:inherit';
+      card.appendChild(inp);
+    }
+    card.appendChild(btn); card.appendChild(err);
+    function go() {
+      if (!needsCode) { enter('guest', ''); return; }
+      var v = inp.value.trim(); if (!v) { err.textContent = 'Type the passcode.'; return; }
+      btn.disabled = true; err.textContent = 'Checking...';
+      raw({ action: 'check', role: key, code: v, pid: pid }).then(function (r) {
+        btn.disabled = false;
+        if (r && r.ok) { enter(key, v); return; }
+        err.textContent = r && r.error === 'auth' ? 'Wrong passcode for ' + title + '.' : (r && r.message) || 'Could not check. Try again.';
+      }, function () { btn.disabled = false; err.textContent = 'No connection. Try again.'; });
+    }
+    btn.addEventListener('click', go);
+    if (inp) inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
+    return card;
+  }
+  function chooser(msg, canCancel) {
+    if (overlay) overlay.remove();
+    overlay = document.createElement('div'); overlay.id = 'pr-login';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:var(--bg,#EEF1EC);color:var(--ink,#14231D);overflow:auto;padding:28px 16px;font-family:system-ui,sans-serif;text-align:center';
+    var h1 = document.createElement('h1'); h1.textContent = 'Bahi-Khata Property'; h1.style.cssText = 'margin:0 0 4px;font-size:28px';
+    var sub = document.createElement('p'); sub.id = 'pr-msg'; sub.textContent = msg || (canCancel ? 'Switch portal. Partner and Admin ask for the passcode every time.' : 'Choose how you want to enter.'); sub.style.cssText = 'margin:0 0 18px;color:var(--muted,#566860)';
+    var row = document.createElement('div'); row.style.cssText = 'display:flex;flex-wrap:wrap;gap:14px;justify-content:center;max-width:1020px;margin:0 auto';
+    row.appendChild(portal('partner', 'Partner', 'For team partners. List and manage properties, track your leads and commission.', '#2F5D4B', true));
+    row.appendChild(portal('admin', 'Admin', 'For the owner. Confirm sales, set commission, manage the team.', '#C8501A', true));
+    row.appendChild(portal('guest', 'Guest', 'For clients. Browse available properties. No passcode needed.', '#3B6EA5', false));
+    overlay.appendChild(h1); overlay.appendChild(sub); overlay.appendChild(row);
+    if (canCancel) {
+      var c = document.createElement('button'); c.type = 'button'; c.id = 'pr-cancel'; c.textContent = 'Cancel, stay as ' + role.charAt(0).toUpperCase() + role.slice(1);
+      c.style.cssText = 'margin-top:18px;font-size:15px;padding:10px 18px;border-radius:10px;border:1px solid var(--line,#D3DACF);background:transparent;color:inherit;min-height:44px';
+      c.addEventListener('click', function () { overlay.remove(); overlay = null; }); overlay.appendChild(c);
+    }
+    document.body.appendChild(overlay);
+  }
+  function ensureAuth() {
+    if (authed()) return Promise.resolve();
+    chooser(); return new Promise(function () {}); // the page reloads once a portal is entered
+  }
+
+  /* ---------- API ---------- */
+  function api(action, body) {
+    return ensureAuth().then(function () { return raw(Object.assign({ role: role || undefined, code: code, pid: pid, action: action }, body)); }).then(function (r) {
+      if (r && r.error === 'auth') { code = ''; lsSet(CKEY, ''); role = ''; lsSet(RKEY, ''); chooser('Your passcode is no longer accepted. Enter again.'); return new Promise(function () {}); }
+      if (r && (r.error === 'locked' || r.error === 'setup')) { chooser(r.message); var e1 = new Error(r.message); e1.code = r.error; throw e1; }
       if (r && r.error) { var e = new Error(r.message || r.error); e.code = r.error === 'denied' ? 'permission_denied' : r.error; throw e; }
       return r;
     });
@@ -61,6 +98,7 @@
     var seq = writeSeq;
     syncing = api('sync', { ver: ver }).then(function (r) {
       me = r.me;
+      if (!role) { role = me.guest ? 'guest' : me.admin ? 'admin' : 'partner'; lsSet(RKEY, role); } // carried over from the older single-code login
       if (!r.same && seq === writeSeq && !inflight) { applyTables(r.tables); ver = r.ver; synced = true; fire(); }
       else if (!synced && r.same) { synced = true; fire(); }
     }).then(function () { syncing = null; }, function (e) { syncing = null; throw e; });
@@ -107,7 +145,7 @@
   }
   var db = { doc: mdoc, collection: mcol };
   var user = {
-    isOwner: function () { return Promise.resolve(!!(me && me.admin)); }, canEdit: function () { return Promise.resolve(!!(me && me.admin)); }, can: function () { return Promise.resolve(true); },
+    isOwner: function () { return Promise.resolve(!!(me && me.admin)); }, canEdit: function () { return Promise.resolve(!!(me && me.admin)); }, can: function () { return Promise.resolve(!(me && me.guest)); },
     id: function () { return Promise.resolve(me.uid); },
     me: function () { var p = store['partners/' + me.uid]; return Promise.resolve({ id: me.uid, name: (p && p.name) || '', isOwner: me.admin, canEdit: me.admin }); },
     profiles: function (ids) { var o = {}; [].concat(ids).forEach(function (i) { var p = store['partners/' + i]; o[i] = { id: i, name: (p && p.name) || '', isMe: me && i === me.uid }; }); return Promise.resolve(o); }
@@ -149,8 +187,10 @@
   window.claude = { use: function (name) {
     return Promise.all([ready(), swReady]).then(function () { return ({ db: db, user: user, assets: assets, downloads: downloads })[name] || null; }, function () { return null; });
   } };
-  window.__pr = { sync: sync, pid: function () { return pid; },
-    signOut: function () { lsSet(CKEY, ''); location.reload(); },
+  window.__pr = { sync: sync, pid: function () { return pid; }, role: function () { return role; },
+    switchRole: function () { chooser('', authed()); },
+    enquire: function (d) { return api('enquire', d); },
+    signOut: function () { lsSet(CKEY, ''); lsSet(RKEY, ''); location.reload(); },
     useProfile: function (id) { if (/^p[a-z0-9]{8,24}$/.test(id)) { lsSet(PKEY, id); location.reload(); } } };
-  document.addEventListener('DOMContentLoaded', function () { ensureCode(); });
+  document.addEventListener('DOMContentLoaded', function () { ensureAuth(); });
 })();

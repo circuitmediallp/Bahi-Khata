@@ -243,10 +243,14 @@ tr:last-child td{border-bottom:0}
 .mv-ctl{position:absolute;right:10px;top:10px;display:grid;gap:6px;z-index:4}
 .mv-ctl button{width:40px;height:40px;border-radius:8px;border:1px solid #777;background:#fff;color:#14231D;font-size:22px;line-height:1}
 .mv-att{position:absolute;right:4px;bottom:2px;font-size:11px;background:rgba(255,255,255,.8);color:#333;padding:1px 5px;border-radius:4px;z-index:4}
+.rolebar{display:flex;align-items:center;gap:10px;justify-content:space-between;border-radius:10px;padding:6px 8px 6px 14px;margin-bottom:12px;color:#fff;font-weight:700;letter-spacing:.07em;font-size:13px}
+.rolebar.admin{background:#C8501A}.rolebar.partner{background:#2F5D4B}.rolebar.guest{background:#3B6EA5}
+.rolebar button{border:1px solid rgba(255,255,255,.75);background:transparent;color:#fff;border-radius:8px;padding:5px 12px;min-height:34px;font-weight:600;letter-spacing:0}
 @media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--pine)}}
 </style>
 
 <div class="wrap">
+  <div class="rolebar" id="rolebar" hidden></div>
   <header class="top">
     <div>
       <h1>Bahi-Khata Property</h1>
@@ -308,6 +312,7 @@ tr:last-child td{border-bottom:0}
   </section>
   <section id="v-more" hidden></section>
   <section id="v-team" hidden></section>
+  <section id="v-activity" hidden></section>
   <section id="v-gate" hidden></section>
 </div>
 
@@ -464,6 +469,20 @@ tr:last-child td{border-bottom:0}
   </div>
 </div>
 
+<div class="sheet" id="enq-sheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="enq-title">
+    <h2 id="enq-title">I am interested</h2>
+    <p class="note-ro" id="enq-about"></p>
+    <form id="enq-form" class="form" novalidate>
+      <label class="full">Your name<input id="eq-name" maxlength="80" autocomplete="name"></label>
+      <label class="full">Your phone number<input id="eq-phone" inputmode="tel" maxlength="16" placeholder="10-digit mobile" autocomplete="tel"></label>
+      <label class="full">Message (optional)<textarea id="eq-note" rows="3" maxlength="300" placeholder="Best time to call, questions, budget"></textarea></label>
+      <div class="form-foot full"><span class="msg bad" id="eq-err" role="alert"></span>
+        <button class="btn" type="button" id="eq-cancel">Cancel</button><button class="btn primary" type="submit" id="eq-send">Send enquiry</button></div>
+    </form>
+  </div>
+</div>
+
 <div class="sheet" id="lead-sheet" hidden>
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="lead-title">
     <h2 id="lead-title">Add lead</h2>
@@ -579,15 +598,15 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   var AMEN = ['Parking', 'Wi-Fi', 'Power backup', 'Lift', 'Geyser', 'AC', 'Modular kitchen', 'Garden', 'Pet friendly', '24x7 water', 'Security', 'Mountain view'];
   var PTYPES = ['Residential plot', 'Agricultural land', 'Commercial plot', 'House / villa', 'Hill / orchard land', 'Other'];
   var ID_TYPES = ['Aadhaar (masked copy)', 'Driving licence', 'Passport', 'Voter ID', 'PAN card'];
-  var TABS = ['home', 'plots', 'rentals', 'leads', 'more', 'layouts', 'earnings', 'team'];
-  var NAVOF = { home: 'home', plots: 'plots', rentals: 'rentals', leads: 'leads', more: 'more', layouts: 'more', earnings: 'more', team: 'more' };
+  var TABS = ['home', 'plots', 'rentals', 'leads', 'more', 'layouts', 'earnings', 'team', 'activity'];
+  var NAVOF = { home: 'home', plots: 'plots', rentals: 'rentals', leads: 'leads', more: 'more', layouts: 'more', earnings: 'more', team: 'more', activity: 'more' };
   var PTAGS = ['Mountain view', 'Near market', 'Farm view', 'Residential colony', 'Road facing', 'Near highway', 'River / stream side', 'Forest side', 'Near school', 'Near hospital'];
   var RADII = [5, 10, 15, 25];
   var STAGES = { new: 'New', contacted: 'Contacted', visited: 'Visited', negotiating: 'Negotiating', won: 'Won', lost: 'Lost' };
   var $ = function (id) { return document.getElementById(id); };
   var S = { items: [], layouts: [], partners: {}, sales: [], earn: [], settings: null, tab: 'home', filter: 'all', mine: false, q: '', sort: 'new', lsel: '',
     layoutId: '', zoom: 1, onlyAvail: false, selected: '', me: null, admin: false, canWrite: true, db: null, user: null, assets: null, downloads: null,
-    loaded: {}, names: {}, myName: '', saving: false, rentals: [], notes: [], leads: [], here: null, nb: { on: false, c: null, r: 10, area: '', tags: [], saved: false, view: 'list', pick: false }, lf: { q: '', stage: 'open' }, openNotes: {}, rawWrite: true, ready: false, booted: false,
+    loaded: {}, names: {}, myName: '', saving: false, rentals: [], notes: [], leads: [], log: [], pub: null, role: '', guest: false, only: '', here: null, nb: { on: false, c: null, r: 10, area: '', tags: [], saved: false, view: 'list', pick: false }, lf: { q: '', stage: 'open' }, openNotes: {}, rawWrite: true, ready: false, booted: false,
     rf: { q: '', type: 'all', status: 'all', beds: 0, sort: 'new', mine: false } };
   var F = { photos: [], fresh: [], removed: [], shape: [], busy: 0, editing: null, pano: null, layoutId: '', mode: 'plot', amen: [] };
   var SALE = null, MK = null, VW = null, LF = { file: null }, D = null, G = { key: '', front: null, back: null, selfie: null, busy: false, edit: false };
@@ -687,8 +706,8 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   /* ---------- shell: tabs, banner, header ---------- */
   var rt = 0;
   function sched() { if (rt) return; rt = setTimeout(function () { rt = 0; render(); }, 40); }
-  function tabOk(t) { return TABS.indexOf(t) >= 0 && (t !== 'team' || S.admin); }
-  function go(tab) { S.tab = tab; try { location.hash = tab; } catch (e) {} render(); window.scrollTo(0, 0); }
+  function tabOk(t) { if (S.guest) return t === 'plots' || t === 'rentals'; return TABS.indexOf(t) >= 0 && ((t !== 'team' && t !== 'activity') || S.admin); }
+  function go(tab) { S.only = ''; S.tab = tab; try { location.hash = tab; } catch (e) {} render(); window.scrollTo(0, 0); }
   function hasProfile() { return !!S.partners[S.me]; }
   function updPerm() { S.ready = !!S.loaded.partners; S.canWrite = S.rawWrite && S.ready && hasProfile(); }
   function isGated() { return S.booted && S.rawWrite && !!S.me && !!S.loaded.partners && !hasProfile(); }
@@ -703,32 +722,40 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   function render() {
     updPerm();
     var gate = isGated();
-    if (!tabOk(S.tab)) S.tab = 'home';
+    if (!tabOk(S.tab)) S.tab = S.guest ? 'plots' : 'home';
+    renderRole();
     TABS.forEach(function (k) { $('v-' + k).hidden = gate || k !== S.tab; });
     $('v-gate').hidden = !gate; $('nav-wrap').hidden = gate; $('ro').hidden = true;
     renderNav(); renderHead(); renderFab();
     if (gate) { renderGate(); return; }
-    ({ home: renderHome, plots: renderPlots, rentals: renderRentals, leads: renderLeads, more: renderMore, layouts: renderLayouts, earnings: renderEarnings, team: renderTeam })[S.tab]();
+    ({ home: renderHome, plots: renderPlots, rentals: renderRentals, leads: renderLeads, more: renderMore, layouts: renderLayouts, earnings: renderEarnings, team: renderTeam, activity: renderActivity })[S.tab]();
   }
   function renderNav() {
     var n = $('nav'); n.textContent = '';
     var due = dueLeads().length, rep = S.admin ? sentSales().length : 0;
+    if (S.guest) { [['plots', 'Plots for sale'], ['rentals', 'Rentals']].forEach(function (p) { n.appendChild(h('button', { type: 'button', 'aria-current': S.tab === p[0] ? 'page' : false, onclick: function () { go(p[0]); } }, p[1])); }); return; }
     var items = [['home', 'Home'], ['plots', 'Plots'], ['rentals', 'Rentals'], ['leads', 'Leads' + (due ? ' (' + due + ')' : '')], ['more', 'More' + (rep ? ' (' + rep + ')' : '')]];
     items.forEach(function (p) { n.appendChild(h('button', { type: 'button', 'aria-current': NAVOF[S.tab] === p[0] ? 'page' : false, onclick: function () { go(p[0]); } }, p[1])); });
   }
-  var TITLES = { home: 'Bahi-Khata Property', plots: 'Plots for sale', rentals: 'Rentals', leads: 'Leads', more: 'More', layouts: 'Layout maps', earnings: 'Earnings', team: 'Team' };
-  var SUBS = { home: 'What needs your attention today.', plots: 'Price, size and map pin for every plot.', rentals: 'Houses, flats, villas and hotels for monthly rent.', leads: 'Buyers and tenants you are following up.', more: 'Maps, earnings, team and settings.', layouts: 'Plot positions on each layout map.', earnings: 'Sales and commission.', team: 'Partners using this app.' };
+  var TITLES = { home: 'Bahi-Khata Property', plots: 'Plots for sale', rentals: 'Rentals', leads: 'Leads', more: 'More', layouts: 'Layout maps', earnings: 'Earnings', team: 'Team', activity: 'Activity log' };
+  var SUBS = { home: 'What needs your attention today.', plots: 'Price, size and map pin for every plot.', rentals: 'Houses, flats, villas and hotels for monthly rent.', leads: 'Buyers and tenants you are following up.', more: 'Maps, earnings, team and settings.', layouts: 'Plot positions on each layout map.', earnings: 'Sales and commission.', team: 'Partners using this app.', activity: 'Who changed what, newest first.' };
   function renderHead() {
     var a = $('hacts'); a.textContent = '';
     $('subtitle').textContent = SUBS[S.tab] || '';
     document.querySelector('.top h1').textContent = TITLES[S.tab] || 'Bahi-Khata Property';
-    if (!$('v-gate').hidden) return;
+    if (!$('v-gate').hidden || S.guest) return;
     if (NAVOF[S.tab] === 'more' && S.tab !== 'more') a.appendChild(h('button', { class: 'btn backbtn', type: 'button', onclick: function () { go('more'); } }, '← More'));
     if (S.tab === 'plots') { if (S.downloads && S.items.length) a.appendChild(h('button', { class: 'btn', type: 'button', onclick: exportPlotsCsv }, 'Export CSV')); }
     else if (S.tab === 'rentals') { if (S.downloads && S.rentals.length) a.appendChild(h('button', { class: 'btn', type: 'button', onclick: exportRentalsCsv }, 'Export CSV')); }
     else if (S.tab === 'layouts') { if (S.canWrite && S.assets) a.appendChild(h('button', { class: 'btn primary', type: 'button', onclick: openLayoutSheet }, '+ Add layout map')); }
     else if (S.tab === 'earnings' && S.admin && S.downloads && S.sales.length) a.appendChild(h('button', { class: 'btn', type: 'button', onclick: exportSalesCsv }, 'Export sales CSV'));
     else if (S.tab === 'leads' && S.downloads && S.leads.length) a.appendChild(h('button', { class: 'btn', type: 'button', onclick: exportLeadsCsv }, 'Export CSV'));
+  }
+  function renderRole() {
+    var b = $('rolebar'); b.hidden = !S.booted || !S.role; if (b.hidden) return;
+    b.className = 'rolebar ' + S.role; b.textContent = '';
+    b.appendChild(h('span', { text: S.role === 'admin' ? 'ADMIN PORTAL' : S.role === 'partner' ? 'PARTNER PORTAL' : 'GUEST VIEW' }));
+    b.appendChild(h('button', { type: 'button', onclick: function () { window.__pr.switchRole(); } }, 'Switch'));
   }
   function renderFab() {
     var f = $('fab'), t = S.tab, show = S.canWrite && (t === 'plots' || t === 'rentals' || t === 'leads');
@@ -829,7 +856,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
     var acts = h('div', { class: 'acts-row' },
       h('a', { class: 'btn small primary', href: mapsUrl(it), target: '_blank', rel: 'noopener noreferrer' }, 'Open in Maps'),
       h('a', { class: 'btn small', href: dirUrl(it), target: '_blank', rel: 'noopener noreferrer' }, 'Directions'),
-      h('a', { class: 'btn small', href: 'https://wa.me/?text=' + encodeURIComponent(share), target: '_blank', rel: 'noopener noreferrer' }, 'WhatsApp'),
+      h('a', { class: 'btn small', href: 'https://wa.me/?text=' + encodeURIComponent(share), target: '_blank', rel: 'noopener noreferrer' }, 'WhatsApp'), clientLinkBtn(it),
       h('button', { class: 'btn small', type: 'button', onclick: function () { copy(share, 'Listing copied for sharing'); } }, 'Copy'));
     if (L && it.shape.length) acts.appendChild(h('button', { class: 'btn small', type: 'button', onclick: function () { S.layoutId = L.id; S.selected = it.id; go('layouts'); } }, 'View on layout'));
     kids.push(acts);
@@ -966,7 +993,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
     kids.push(h('div', { class: 'acts-row' },
       h('a', { class: 'btn small primary', href: mapsUrl(r), target: '_blank', rel: 'noopener noreferrer' }, 'Open in Maps'),
       h('a', { class: 'btn small', href: dirUrl(r), target: '_blank', rel: 'noopener noreferrer' }, 'Directions'),
-      h('a', { class: 'btn small', href: 'https://wa.me/?text=' + encodeURIComponent(share), target: '_blank', rel: 'noopener noreferrer' }, 'WhatsApp'),
+      h('a', { class: 'btn small', href: 'https://wa.me/?text=' + encodeURIComponent(share), target: '_blank', rel: 'noopener noreferrer' }, 'WhatsApp'), clientLinkBtn(r),
       h('button', { class: 'btn small', type: 'button', onclick: function () { copy(share, 'Rental copied for sharing'); } }, 'Copy')));
     var m = h('div', { class: 'acts-row' }), editable = canEditPlot(r);
     if (editable) {
@@ -1462,6 +1489,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   }
   function passFind(o) {
     var nb = S.nb;
+    if (S.only) return o.id === S.only;
     if (nb.saved && !SV[o.id]) return false;
     if (nb.area && normArea(o.area) !== nb.area) return false;
     if (nearOn() && dkm(o) > nb.r) return false;
@@ -1475,9 +1503,16 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   }
   function renderFinder(el, list) {
     var sec = el.parentNode, isMap = S.nb.view === 'map';
-    sec.querySelector('.bar').hidden = isMap; sec.querySelector('.stats').hidden = isMap;
+    sec.querySelector('.bar').hidden = isMap; sec.querySelector('.stats').hidden = isMap || S.guest;
+    var sc0 = sec.querySelector('#chips, #rstat'); if (sc0) sc0.hidden = S.guest;
     if (typing(el)) return; el.textContent = '';
     var nb = S.nb, areas = areasOf(list);
+    if (S.only) {
+      var found = list.some(function (o) { return o.id === S.only; });
+      el.appendChild(h('div', { class: 'box' }, h('b', { text: found ? 'Showing the property shared with you' : (S.loaded.listings ? 'This property is no longer available' : 'Loading...') }),
+        h('div', { class: 'acts-row', style: 'margin-top:8px' }, h('button', { class: 'btn small primary', type: 'button', onclick: function () { S.only = ''; try { history.replaceState(null, '', location.pathname); } catch (e) {} render(); } }, 'See all properties'))));
+      return;
+    }
     var row = h('div', { class: 'chips scroll', role: 'group', 'aria-label': 'Area' });
     row.appendChild(fchip('All areas', !nb.on && !nb.area, function () { nb.on = false; nb.area = ''; render(); }));
     row.appendChild(fchip('◎ Nearby', nb.on, function () { nb.on = !nb.on; nb.area = ''; if (nb.on && !nb.c) useMyLoc(); else render(); }));
@@ -1520,6 +1555,8 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
       h('button', { type: 'button', 'aria-pressed': String(nb.view === 'map'), onclick: function () { nb.view = 'map'; render(); } }, 'Map'))));
   }
   function showResults(box, items, cardFn, emptyMsg) {
+    if (S.guest) cardFn = gcard;
+    if (S.only && !items.length) return;
     if (S.nb.view !== 'map') {
       if (!items.length) { box.appendChild(h('div', { class: 'empty', text: emptyMsg + (nearOn() ? ' Try a bigger radius.' : '') })); return; }
       var g = h('div', { class: 'grid' }); items.forEach(function (o) { g.appendChild(cardFn(o)); }); box.appendChild(g); return;
@@ -1529,6 +1566,77 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
     var sel = items.filter(function (o) { return o.id === MV.sel; })[0];
     box.appendChild(h('div', { class: 'who', style: 'margin:10px 0', text: items.length ? items.length + (items.length === 1 ? ' property' : ' properties') + ' on the map. ' + (sel ? '' : 'Tap a price to see the details.') : emptyMsg }));
     if (sel) box.appendChild(h('div', { class: 'grid' }, cardFn(sel)));
+  }
+
+  /* ---------- guest card + enquiry ---------- */
+  function linkFor(o) { return location.origin + location.pathname + '#' + (o.kind === 'rental' ? 'r-' : 'p-') + o.id; }
+  function clientLinkBtn(o) {
+    var live = o.status === 'available'; if (!live) return null;
+    var price = o.kind === 'rental' ? short(o.rent) + '/month' : short(o.price);
+    var text = o.title + (o.area ? ' (' + o.area + ')' : '') + '\n' + price + '\nPhotos and details: ' + linkFor(o);
+    return h('a', { class: 'btn small', href: 'https://wa.me/?text=' + encodeURIComponent(text), target: '_blank', rel: 'noopener noreferrer', title: 'Sends a link that opens this property in Guest view, with an approximate location' }, 'Client link');
+  }
+  function gcard(o) {
+    var rental = o.kind === 'rental', kids = [], price = rental ? o.rent : o.price;
+    if (o.photos.length || o.pano) {
+      var tags = h('div', { class: 'tag' });
+      if (o.pano) tags.appendChild(h('span', { text: '360°' }));
+      if (o.photos.length > 1) tags.appendChild(h('span', { text: o.photos.length + ' photos' }));
+      kids.push(h('button', { class: 'cover', type: 'button', 'aria-label': 'View photos of ' + o.title, onclick: function () { openViewer(o, 0); } }, h('img', { src: imgUrl(o.photos[0] || o.pano.id), alt: '', loading: 'lazy' }), tags));
+    }
+    kids.push(h('div', { class: 'card-h' }, h('div', { style: 'min-width:0' }, h('h3', { text: o.title }), h('div', { class: 'sub', text: [o.type, o.area].filter(Boolean).join(' · ') })), h('div', { class: 'hd-r' }, heartBtn(o))));
+    var bg = badgeRow(o, price); if (bg) kids.push(bg);
+    kids.push(rental ? h('div', { class: 'price' }, short(price), h('span', { text: ' / month', style: 'font-size:15px;font-family:var(--font-body);font-weight:500;color:var(--muted)' })) : h('div', { class: 'price', text: short(price) }));
+    if (rental) kids.push(h('dl', { class: 'facts' }, o.deposit ? fact('Deposit', short(o.deposit)) : null, fact('Rooms', rooms(o)), o.furn ? fact('Furnishing', o.furn) : null, o.sqft ? fact('Area', inr(o.sqft) + ' sq ft') : null,
+      o.availFrom ? fact('Available from', fdate(o.availFrom)) : null, o.amenities.length ? h('div', { class: 'note' }, o.amenities.join(' · ')) : null));
+    else { var rt = rate(o); kids.push(h('dl', { class: 'facts' }, fact('Size', sizeText(o)), rt ? fact('Rate', '₹' + inr(rt) + ' / sq ft') : null)); }
+    var kl = kmLine(o); if (kl) kids.push(kl);
+    kids.push(h('div', { class: 'who', text: 'Map location is approximate. Contact us for the exact spot and a site visit.' }));
+    var acts = h('div', { class: 'acts-row' }), ph = S.pub && S.pub.phone;
+    acts.appendChild(h('button', { class: 'btn small primary', type: 'button', onclick: function () { openEnq(o); } }, 'I am interested'));
+    if (ph) {
+      var wl = waLink(ph, 'Hi, I am interested in ' + o.title + ' (' + short(price) + (rental ? '/month' : '') + '). ' + linkFor(o));
+      acts.appendChild(h('a', { class: 'btn small', href: 'tel:' + ph.replace(/[^0-9+]/g, '') }, 'Call'));
+      if (wl) acts.appendChild(h('a', { class: 'btn small', href: wl, target: '_blank', rel: 'noopener noreferrer' }, 'WhatsApp'));
+    }
+    kids.push(acts);
+    return h.apply(null, ['article', { class: 'card' }].concat(kids));
+  }
+  var EQ = null;
+  function openEnq(o) {
+    EQ = o; $('enq-form').reset(); $('eq-err').textContent = ''; $('enq-about').textContent = o.title + (o.area ? ', ' + o.area : '') + '. Leave your number and we will call you back.';
+    $('enq-sheet').hidden = false; setTimeout(function () { if (!$('enq-sheet').contains(document.activeElement)) $('eq-name').focus(); }, 30);
+  }
+  function sendEnq(e) {
+    e.preventDefault(); var err = $('eq-err'); err.textContent = '';
+    var name = $('eq-name').value.trim(), phone = $('eq-phone').value.replace(/[\s-]/g, '');
+    if (!name) { err.textContent = 'Enter your name.'; return; }
+    if (!/^\+?\d{10,14}$/.test(phone)) { err.textContent = 'Enter a valid phone number.'; return; }
+    $('eq-send').disabled = true;
+    window.__pr.enquire({ name: name, phone: phone, ref: EQ ? EQ.id : '', note: $('eq-note').value.trim() }).then(function () { $('eq-send').disabled = false; $('enq-sheet').hidden = true; toast('Thank you. We will call you soon.'); },
+      function (x) { $('eq-send').disabled = false; err.textContent = (x && x.code === 'busy' && x.message) || 'Could not send. Check your connection and try again.'; });
+  }
+
+  /* ---------- activity log (Admin) ---------- */
+  function logText(e) {
+    var what = { listings: 'plot', rentals: 'rental', layouts: 'layout map', sales: 'the sale of', partners: 'profile', settings: 'settings' }[e.key] || e.key;
+    var v = e.op === 'add' ? 'added' : e.op === 'delete' ? 'deleted' : 'updated';
+    if (e.key === 'sales') v = e.op === 'delete' ? 'reopened' : e.op === 'add' ? 'confirmed' : 'updated';
+    if (e.key === 'partners' && e.op === 'delete') v = 'removed';
+    if (e.key === 'settings') return nameOf(e.by) + ' changed ' + (e.title === 'public' ? 'the number guests can call' : e.title === 'commission' ? 'the commission rates' : 'settings');
+    var t = nameOf(e.by) + ' ' + v + ' ' + what + ' "' + e.title + '"';
+    if (e.status) t += ', now ' + (STATUS[e.status] || RSTATUS[e.status] || e.status);
+    if (e.from != null && e.to != null) t += ', price ' + short(e.from) + ' → ' + short(e.to);
+    return t;
+  }
+  function renderActivity() {
+    var v = $('v-activity'); v.textContent = '';
+    if (!S.loaded.log) { v.appendChild(h('div', { class: 'empty', text: 'Loading...' })); return; }
+    if (!S.log.length) { v.appendChild(h('div', { class: 'empty', text: 'No activity recorded yet. Changes made from now on appear here.' })); return; }
+    v.appendChild(h('p', { class: 'note-ro', text: 'The last 150 changes to plots, rentals, maps, sales, profiles and settings.' }));
+    S.log.slice().sort(function (a, b) { return b.at - a.at; }).forEach(function (e) {
+      v.appendChild(h('div', { class: 'row' }, h('div', { class: 'grow', text: logText(e) }), h('span', { class: 'who', title: new Date(e.at).toLocaleString('en-IN'), text: ago(e.at) })));
+    });
   }
 
   /* ---------- map (OpenStreetMap tiles) ---------- */
@@ -1885,7 +1993,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   /* ---------- leads ---------- */
   function cleanLead(d, id) {
     return { id: id, name: String(d.name || ''), phone: String(d.phone || ''), ref: String(d.ref || ''), interest: String(d.interest || ''), budget: String(d.budget || ''), stage: STAGES[d.stage] ? d.stage : 'new',
-      followUp: num(d.followUp) || 0, notes: String(d.notes || ''), by: d.by || '', createdAt: num(d.createdAt) || 0, updatedAt: num(d.updatedAt) || 0 };
+      followUp: num(d.followUp) || 0, notes: String(d.notes || ''), by: d.by || '', source: d.source === 'guest' ? 'guest' : '', createdAt: num(d.createdAt) || 0, updatedAt: num(d.updatedAt) || 0 };
   }
   function refTitle(l) { var x = S.items.filter(function (i) { return i.id === l.ref; })[0] || S.rentals.filter(function (r) { return r.id === l.ref; })[0]; return x ? x.title : ''; }
   function renderLeads() {
@@ -1929,6 +2037,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
       m.appendChild(armBtn('Delete', 'Confirm delete', function () { S.db.collection('leads').doc(l.id).delete().then(function () { toast('Lead deleted'); }, function () { toast('Could not delete.'); }); }, 'danger'));
     }
     kids.push(m);
+    if (l.source === 'guest') kids.push(h('div', { class: 'bdgs' }, h('span', { class: 'bdg new', text: 'Guest enquiry from the app' })));
     if (S.admin && l.by) kids.push(h('div', { class: 'who', text: 'Added by ' + nameOf(l.by) + ' · ' + fdate(l.createdAt) }));
     return h.apply(null, ['article', { class: 'card' }].concat(kids));
   }
@@ -1971,13 +2080,24 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
     v.appendChild(moreBtn('Layout maps', 'See which plots are available on each layout', function () { go('layouts'); }));
     v.appendChild(moreBtn('Earnings and commission', rep ? rep + ' sale report' + (rep > 1 ? 's' : '') + ' waiting for you' : (S.admin ? 'Confirm sales, set rates, mark commission paid' : 'Your commission on sales'), function () { go('earnings'); }));
     if (S.admin) v.appendChild(moreBtn('Team', 'Partners using the app', function () { go('team'); }));
+    if (S.admin) v.appendChild(moreBtn('Activity log', 'Who added, edited, deleted or sold what', function () { go('activity'); }));
+    if (S.admin) {
+      var gb = h('div', { class: 'box' }, h('h3', { text: 'Number guests can call' }), h('div', { class: 'hint', text: 'Guests see Call and WhatsApp buttons to this number on every property. Partner numbers stay hidden from guests.' }));
+      var gn = h('input', { class: 'inl', maxlength: '60', placeholder: 'Name shown', value: (S.pub && S.pub.name) || false, 'aria-label': 'Contact name for guests' });
+      var gp = h('input', { class: 'inl', inputmode: 'tel', maxlength: '16', placeholder: '10-digit mobile', value: (S.pub && S.pub.phone) || false, 'aria-label': 'Contact phone for guests' });
+      gb.appendChild(h('div', { class: 'acts-row', style: 'margin-top:8px' }, gn, gp, h('button', { class: 'btn small primary', type: 'button', onclick: function () {
+        var ph = gp.value.replace(/[\s-]/g, ''); if (ph && !/^\+?\d{10,14}$/.test(ph)) { toast('Enter a valid phone number.'); return; }
+        S.db.doc('settings/public').set({ name: gn.value.trim(), phone: ph }).then(function () { toast('Saved'); }, function () { toast('Could not save.'); });
+      } }, 'Save')));
+      v.appendChild(gb);
+    }
     var p = S.partners[S.me] || {};
     var box = h('div', { class: 'box', style: 'margin-top:6px' }, h('h3', { text: 'My profile' }));
     profileForm(box, p, function () { toast('Profile saved'); }); v.appendChild(box);
     var acts = h('div', { class: 'box' }, h('h3', { text: 'App' }),
-      h('div', { class: 'hint', text: S.admin ? 'You are signed in as owner.' : 'You are signed in as a partner.' }),
+      h('div', { class: 'hint', text: S.admin ? 'You are in the Admin portal.' : 'You are in the Partner portal.' }),
       h('div', { class: 'acts-row' }, h('button', { class: 'btn small', type: 'button', onclick: function () { S.sync = 1; window.__pr.sync().then(function () { toast('Updated'); }, function () { toast('Could not refresh.'); }); } }, 'Refresh now'),
-        h('button', { class: 'btn small', type: 'button', onclick: function () { window.__pr.signOut(); } }, 'Change access code')),
+        h('button', { class: 'btn small', type: 'button', onclick: function () { window.__pr.switchRole(); } }, 'Switch portal')),
       h('div', { class: 'hint', text: 'Everything is saved in the shared Google Sheet. Lists refresh on their own every 30 seconds.' }));
     v.appendChild(acts);
   }
@@ -2023,6 +2143,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   function topClose() {
     if (!$('mark').hidden) { closeMark(); return true; }
     if (!$('viewer').hidden) { closeViewer(); return true; }
+    if (!$('enq-sheet').hidden) { $('enq-sheet').hidden = true; return true; }
     if (!$('lead-sheet').hidden) { $('lead-sheet').hidden = true; return true; }
     if (!$('docs-sheet').hidden) { closeDocs(); return true; }
     if (!$('sale-sheet').hidden) { $('sale-sheet').hidden = true; return true; }
@@ -2077,6 +2198,9 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   $('rsort').addEventListener('change', function (e) { S.rf.sort = e.target.value; if (S.rf.sort === 'near') askHere(renderRentals); else renderRentals(); });
   $('docs-close').addEventListener('click', closeDocs);
   $('fab').addEventListener('click', addNew);
+  $('enq-form').addEventListener('submit', sendEnq);
+  $('eq-cancel').addEventListener('click', function () { $('enq-sheet').hidden = true; });
+  $('enq-sheet').addEventListener('mousedown', function (e) { if (e.target === $('enq-sheet')) $('enq-sheet').hidden = true; });
   $('lead-form').addEventListener('submit', saveLead);
   $('ld-cancel').addEventListener('click', function () { $('lead-sheet').hidden = true; });
   $('lead-sheet').addEventListener('mousedown', function (e) { if (e.target === $('lead-sheet')) $('lead-sheet').hidden = true; });
@@ -2084,8 +2208,14 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   $('docs-sheet').addEventListener('mousedown', function (e) { if (e.target === $('docs-sheet')) closeDocs(); });
   $('d-file').addEventListener('change', function (e) { var f = e.target.files && e.target.files[0]; if (f) addDoc(f); e.target.value = ''; });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') topClose(); });
-  window.addEventListener('hashchange', function () { var t = location.hash.replace('#', ''); if (tabOk(t) && t !== S.tab) { S.tab = t; render(); } });
-  (function () { var t = location.hash.replace('#', ''); if (TABS.indexOf(t) >= 0) S.tab = t; })();
+  function readHash() {
+    var t = location.hash.replace('#', ''), m = /^([pr])-([a-z0-9]+)$/.exec(t);
+    if (m) { S.only = m[2]; S.tab = m[1] === 'p' ? 'plots' : 'rentals'; return true; }
+    if (TABS.indexOf(t) >= 0 && t !== S.tab) { S.tab = t; return true; }
+    return false;
+  }
+  window.addEventListener('hashchange', function () { if (readHash()) render(); });
+  readHash();
 
   /* ---------- boot ---------- */
   function resolveNames() {
@@ -2115,6 +2245,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
         var cw = await S.user.can('data.write'); S.rawWrite = cw !== false;
         try { var me = await S.user.me(); S.myName = me.name || ''; } catch (x) {}
       } else S.rawWrite = false;
+      S.role = (window.__pr && window.__pr.role && window.__pr.role()) || (S.admin ? 'admin' : 'partner'); S.guest = S.role === 'guest';
       S.booted = true; render();
       sub(S.db.collection('partners'), 'partners', function (snap) {
         var m = {}; snap.docs.forEach(function (d) { var x = d.data() || {}; m[d.id] = { name: String(x.name || ''), phone: String(x.phone || ''), joinedAt: num(x.joinedAt) || 0 }; }); S.partners = m;
@@ -2132,6 +2263,8 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
       sub(S.db.collection('layouts'), 'layouts', function (snap) {
         S.layouts = snap.docs.map(function (d) { var x = d.data() || {}; return { id: d.id, name: String(x.name || 'Layout'), area: String(x.area || ''), imageId: String(x.imageId || ''), w: num(x.w) || 0, h: num(x.h) || 0, createdAt: num(x.createdAt) || 0, by: x.by || '' }; }).filter(function (L) { return L.imageId; });
       });
+      sub(S.db.doc('settings/public'), 'pub', function (snap) { var x = snap.exists ? snap.data() : null; S.pub = x ? { name: String(x.name || ''), phone: String(x.phone || '') } : null; });
+      if (S.admin) sub(S.db.collection('log'), 'log', function (snap) { S.log = snap.docs.map(function (d) { var x = d.data() || {}; return { at: num(x.at) || 0, by: x.by || '', op: String(x.op || ''), key: String(x.key || ''), title: String(x.title || ''), status: x.status || '', from: num(x.from), to: num(x.to) }; }); });
       sub(S.db.doc('settings/commission'), 'settings', function (snap) {
         var x = snap.exists ? snap.data() : null; S.settings = x ? { listPct: num(x.listPct) || 0, sellPct: num(x.sellPct) || 0 } : null;
       });
