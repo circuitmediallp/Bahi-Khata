@@ -2,10 +2,10 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Plot Register</title>
+<title>Bahi-Khata Property</title>
 <meta name="theme-color" content="#2F5D4B">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Plot Register"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bahi-Khata Property"><meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html,body{margin:0}body{font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="config.js"></script><script src="shim.js"></script>
@@ -217,13 +217,39 @@ tr:last-child td{border-bottom:0}
 .st.s-new{--c:var(--hold)}.st.s-contacted{--c:var(--warn)}.st.s-visited{--c:var(--pine)}.st.s-negotiating{--c:var(--accent)}.st.s-won{--c:var(--ok)}.st.s-lost{--c:var(--na)}
 .late{color:var(--sold);font-weight:600}
 .backbtn{margin-right:auto}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.chips.scroll .chip{flex:0 0 auto;white-space:nowrap}
+.finder{display:grid;gap:8px;margin:0 0 10px;min-width:0}
+.finder .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 16px;min-height:36px;color:var(--ink);font-weight:500}
+.seg button[aria-pressed=true]{background:var(--pine);color:#fff}
+.bdgs{display:flex;flex-wrap:wrap;gap:6px}
+.bdg{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted)}
+.bdg.new{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.bdg.cut{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.hd-r{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.heart{border:0;background:transparent;font-size:24px;line-height:1;min-width:40px;min-height:40px;color:var(--muted)}
+.heart[aria-pressed=true]{color:var(--sold)}
+.mv{position:relative;overflow:hidden;height:clamp(340px,calc(100vh - 380px),560px);border:1px solid var(--line);border-radius:12px;background:#dfe6dc;touch-action:none;user-select:none;-webkit-user-select:none}
+.mv-l{position:absolute;inset:0}
+.mv-l img{position:absolute;width:256px;height:256px;max-width:none;pointer-events:none}
+.mv-pin{position:absolute;transform:translate(-50%,-50%);border:1px solid #14231D;background:#fff;color:#14231D;border-radius:999px;padding:3px 9px;font-size:12.5px;font-weight:700;white-space:nowrap;min-height:28px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.mv-pin.off{background:#e3e3e3;color:#555;border-color:#777}
+.mv-pin.sel{background:#C8501A;color:#fff;border-color:#C8501A;z-index:3}
+.mv-pin.cl{background:#2F5D4B;color:#fff;border-color:#fff;min-width:36px;min-height:36px;font-size:14px}
+.mv-circ{position:absolute;border:2px solid #C8501A;background:rgba(200,80,26,.10);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
+.mv-me{position:absolute;width:14px;height:14px;border-radius:50%;background:#1a73e8;border:3px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 0 2px rgba(26,115,232,.4);pointer-events:none}
+.mv-ctl{position:absolute;right:10px;top:10px;display:grid;gap:6px;z-index:4}
+.mv-ctl button{width:40px;height:40px;border-radius:8px;border:1px solid #777;background:#fff;color:#14231D;font-size:22px;line-height:1}
+.mv-att{position:absolute;right:4px;bottom:2px;font-size:11px;background:rgba(255,255,255,.8);color:#333;padding:1px 5px;border-radius:4px;z-index:4}
 @media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--pine)}}
 </style>
 
 <div class="wrap">
   <header class="top">
     <div>
-      <h1>Plot Register</h1>
+      <h1>Bahi-Khata Property</h1>
       <p id="subtitle">Shared listings with price, plot size and map pin.</p>
     </div>
     <div class="acts" id="hacts"></div>
@@ -235,6 +261,7 @@ tr:last-child td{border-bottom:0}
 
   <section id="v-plots">
     <div class="stats" id="stats"></div>
+    <div class="finder" id="find-plots"></div>
     <div class="bar">
       <div class="bar-row">
         <input type="search" id="q" placeholder="Search plots" aria-label="Search listings">
@@ -253,6 +280,7 @@ tr:last-child td{border-bottom:0}
   </section>
   <section id="v-rentals" hidden>
     <div class="stats" id="rstats"></div>
+    <div class="finder" id="find-rentals"></div>
     <div class="bar">
       <div class="bar-row">
         <input type="search" id="rq" placeholder="Search rentals" aria-label="Search rentals">
@@ -323,6 +351,7 @@ tr:last-child td{border-bottom:0}
         </select>
       </label>
 
+      <div class="full"><div class="hint" style="margin-bottom:6px">Views and surroundings (tap all that apply)</div><div class="chips" id="f-tags"></div></div>
       <div class="dc only-rental" hidden>
         <label>Security deposit<input id="r-deposit" inputmode="decimal" placeholder="e.g. 36000"></label>
         <label>Bedrooms / rooms<input id="r-beds" inputmode="numeric" placeholder="e.g. 2" maxlength="3"></label>
@@ -552,11 +581,13 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   var ID_TYPES = ['Aadhaar (masked copy)', 'Driving licence', 'Passport', 'Voter ID', 'PAN card'];
   var TABS = ['home', 'plots', 'rentals', 'leads', 'more', 'layouts', 'earnings', 'team'];
   var NAVOF = { home: 'home', plots: 'plots', rentals: 'rentals', leads: 'leads', more: 'more', layouts: 'more', earnings: 'more', team: 'more' };
+  var PTAGS = ['Mountain view', 'Near market', 'Farm view', 'Residential colony', 'Road facing', 'Near highway', 'River / stream side', 'Forest side', 'Near school', 'Near hospital'];
+  var RADII = [5, 10, 15, 25];
   var STAGES = { new: 'New', contacted: 'Contacted', visited: 'Visited', negotiating: 'Negotiating', won: 'Won', lost: 'Lost' };
   var $ = function (id) { return document.getElementById(id); };
   var S = { items: [], layouts: [], partners: {}, sales: [], earn: [], settings: null, tab: 'home', filter: 'all', mine: false, q: '', sort: 'new', lsel: '',
     layoutId: '', zoom: 1, onlyAvail: false, selected: '', me: null, admin: false, canWrite: true, db: null, user: null, assets: null, downloads: null,
-    loaded: {}, names: {}, myName: '', saving: false, rentals: [], notes: [], leads: [], here: null, lf: { q: '', stage: 'open' }, openNotes: {}, rawWrite: true, ready: false, booted: false,
+    loaded: {}, names: {}, myName: '', saving: false, rentals: [], notes: [], leads: [], here: null, nb: { on: false, c: null, r: 10, area: '', tags: [], saved: false, view: 'list', pick: false }, lf: { q: '', stage: 'open' }, openNotes: {}, rawWrite: true, ready: false, booted: false,
     rf: { q: '', type: 'all', status: 'all', beds: 0, sort: 'new', mine: false } };
   var F = { photos: [], fresh: [], removed: [], shape: [], busy: 0, editing: null, pano: null, layoutId: '', mode: 'plot', amen: [] };
   var SALE = null, MK = null, VW = null, LF = { file: null }, D = null, G = { key: '', front: null, back: null, selfie: null, busy: false, edit: false };
@@ -631,7 +662,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
       price: num(d.price) || 0, size: num(d.size) || 0, unit: UNITS[d.unit] ? d.unit : 'sqft', lat: num(d.lat), lng: num(d.lng), notes: String(d.notes || ''),
       by: d.by || '', createdAt: num(d.createdAt) || 0, updatedAt: num(d.updatedAt) || 0, updatedBy: d.updatedBy || '',
       photos: Array.isArray(d.photos) ? d.photos.filter(function (x) { return typeof x === 'string'; }) : [], pano: pano,
-      layoutId: d.layoutId || '', plotNo: String(d.plotNo || ''), shape: shape, reportedBy: d.reportedBy || '', reportedAt: num(d.reportedAt) || 0, soldAt: num(d.soldAt) || 0, priceLog: cleanLog(d.priceLog) };
+      layoutId: d.layoutId || '', plotNo: String(d.plotNo || ''), shape: shape, reportedBy: d.reportedBy || '', reportedAt: num(d.reportedAt) || 0, soldAt: num(d.soldAt) || 0, priceLog: cleanLog(d.priceLog), tags: cleanTags(d.tags) };
   }
   function cleanSale(d, id) {
     return { plotId: id, plotTitle: String(d.plotTitle || ''), plotArea: String(d.plotArea || ''), soldPrice: num(d.soldPrice) || 0, soldAt: num(d.soldAt) || 0, buyer: String(d.buyer || ''),
@@ -685,12 +716,12 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
     var items = [['home', 'Home'], ['plots', 'Plots'], ['rentals', 'Rentals'], ['leads', 'Leads' + (due ? ' (' + due + ')' : '')], ['more', 'More' + (rep ? ' (' + rep + ')' : '')]];
     items.forEach(function (p) { n.appendChild(h('button', { type: 'button', 'aria-current': NAVOF[S.tab] === p[0] ? 'page' : false, onclick: function () { go(p[0]); } }, p[1])); });
   }
-  var TITLES = { home: 'Plot Register', plots: 'Plots for sale', rentals: 'Rentals', leads: 'Leads', more: 'More', layouts: 'Layout maps', earnings: 'Earnings', team: 'Team' };
+  var TITLES = { home: 'Bahi-Khata Property', plots: 'Plots for sale', rentals: 'Rentals', leads: 'Leads', more: 'More', layouts: 'Layout maps', earnings: 'Earnings', team: 'Team' };
   var SUBS = { home: 'What needs your attention today.', plots: 'Price, size and map pin for every plot.', rentals: 'Houses, flats, villas and hotels for monthly rent.', leads: 'Buyers and tenants you are following up.', more: 'Maps, earnings, team and settings.', layouts: 'Plot positions on each layout map.', earnings: 'Sales and commission.', team: 'Partners using this app.' };
   function renderHead() {
     var a = $('hacts'); a.textContent = '';
     $('subtitle').textContent = SUBS[S.tab] || '';
-    document.querySelector('.top h1').textContent = TITLES[S.tab] || 'Plot Register';
+    document.querySelector('.top h1').textContent = TITLES[S.tab] || 'Bahi-Khata Property';
     if (!$('v-gate').hidden) return;
     if (NAVOF[S.tab] === 'more' && S.tab !== 'more') a.appendChild(h('button', { class: 'btn backbtn', type: 'button', onclick: function () { go('more'); } }, '← More'));
     if (S.tab === 'plots') { if (S.downloads && S.items.length) a.appendChild(h('button', { class: 'btn', type: 'button', onclick: exportPlotsCsv }, 'Export CSV')); }
@@ -710,6 +741,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   function visible() {
     var q = S.q.trim().toLowerCase();
     var out = S.items.filter(function (it) {
+      if (!passFind(it)) return false;
       if (S.filter === 'sold') { if (!isSold(it)) return false; }
       else if (S.filter !== 'all' && it.status !== S.filter) return false;
       if (S.mine && it.by !== S.me) return false;
@@ -718,7 +750,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
       return !q || [it.title, it.area, it.notes, it.type, it.plotNo, L ? L.name : ''].join(' ').toLowerCase().indexOf(q) >= 0;
     });
     out.sort(function (a, b) {
-      if (S.sort === 'near') return dkm(a) - dkm(b);
+      if (S.sort === 'near' || (S.sort === 'new' && nearOn())) return dkm(a) - dkm(b);
       if (S.sort === 'plow') return (a.price || 0) - (b.price || 0);
       if (S.sort === 'phigh') return (b.price || 0) - (a.price || 0);
       if (S.sort === 'rate') { var ra = rate(a), rb = rate(b); return (ra == null ? 1e18 : ra) - (rb == null ? 1e18 : rb); }
@@ -733,6 +765,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   }
   function renderPlots() {
     var c = counts(), st = $('stats'); st.textContent = '';
+    renderFinder($('find-plots'), S.items);
     if (S.items.length) {
       [['Available', c.available], ['Negotiating', c.negotiating], ['Sold', c.sold]].forEach(function (p) { st.appendChild(h('span', null, h('b', { text: String(p[1]) }), p[0])); });
       st.appendChild(h('span', null, h('b', { text: short(c.inv) }), 'open inventory'));
@@ -756,8 +789,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
         h('p', { text: S.canWrite ? 'Add the first plot. Paste a Google Maps link or the coordinates of a pin, add photos, and your partners will see it here straight away.' : 'Nothing has been listed yet.' })));
       return;
     }
-    if (!items.length) { box.appendChild(h('div', { class: 'empty', text: 'No listings match this filter.' })); return; }
-    var g = h('div', { class: 'grid' }); items.forEach(function (it) { g.appendChild(card(it)); }); box.appendChild(g);
+    showResults(box, items, card, 'No listings match this filter.');
   }
   function statusOptions(it) {
     var o = [['available', 'Available'], ['negotiating', 'Negotiating'], ['na', 'Not available (NA)']];
@@ -781,7 +813,8 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
     }
     kids.push(h('div', { class: 'card-h' },
       h('div', { style: 'min-width:0' }, h('h3', { text: it.title }), h('div', { class: 'sub', text: [it.type, it.area].filter(Boolean).join(' · ') })),
-      h('span', { class: 'st ' + it.status, text: STATUS[it.status] })));
+      h('div', { class: 'hd-r' }, h('span', { class: 'st ' + it.status, text: STATUS[it.status] }), heartBtn(it))));
+    var bg = badgeRow(it, it.price); if (bg) kids.push(bg);
     kids.push(h('div', { class: 'price', text: short(it.price), title: '₹' + inr(it.price) }));
     var pl = logLine(it.priceLog, it.price); if (pl) kids.push(pl);
     var kl = kmLine(it); if (kl) kids.push(kl);
@@ -832,6 +865,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   }
 
   /* ---------- price log, notes ---------- */
+  function cleanTags(a) { return Array.isArray(a) ? a.filter(function (x) { return PTAGS.indexOf(x) >= 0; }) : []; }
   function cleanLog(a) { return Array.isArray(a) ? a.filter(function (x) { return x && num(x.p) != null && num(x.at) != null; }).map(function (x) { return { p: x.p, at: x.at }; }) : []; }
   function logLine(log, cur) {
     if (!log || !log.length) return null;
@@ -870,23 +904,25 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
       rent: num(d.rent) || 0, deposit: num(d.deposit) || 0, beds: num(d.beds) || 0, baths: num(d.baths) || 0, furn: String(d.furn || ''), sqft: num(d.sqft) || 0, availFrom: num(d.availFrom) || 0, tenants: String(d.tenants || ''),
       amenities: Array.isArray(d.amenities) ? d.amenities.filter(function (x) { return typeof x === 'string'; }) : [], lat: num(d.lat), lng: num(d.lng), notes: String(d.notes || ''), by: d.by || '',
       createdAt: num(d.createdAt) || 0, updatedAt: num(d.updatedAt) || 0, updatedBy: d.updatedBy || '',
-      photos: Array.isArray(d.photos) ? d.photos.filter(function (x) { return typeof x === 'string'; }) : [], pano: pano, priceLog: cleanLog(d.priceLog) };
+      photos: Array.isArray(d.photos) ? d.photos.filter(function (x) { return typeof x === 'string'; }) : [], pano: pano, priceLog: cleanLog(d.priceLog), tags: cleanTags(d.tags) };
   }
   function fact(k, v) { return h('div', null, h('dt', { text: k }), h('dd', { text: v })); }
   function visibleR() {
     var f = S.rf, q = f.q.trim().toLowerCase();
     var out = S.rentals.filter(function (r) {
+      if (!passFind(r)) return false;
       if (f.type !== 'all' && r.type !== f.type) return false;
       if (f.status !== 'all' && r.status !== f.status) return false;
       if (f.mine && r.by !== S.me) return false;
       if (f.beds && r.beds < f.beds) return false;
       return !q || [r.title, r.area, r.notes, r.type, r.amenities.join(' ')].join(' ').toLowerCase().indexOf(q) >= 0;
     });
-    out.sort(function (a, b) { if (f.sort === 'near') return dkm(a) - dkm(b); if (f.sort === 'rlow') return a.rent - b.rent; if (f.sort === 'rhigh') return b.rent - a.rent; return b.createdAt - a.createdAt; });
+    out.sort(function (a, b) { if (f.sort === 'near' || (f.sort === 'new' && nearOn())) return dkm(a) - dkm(b); if (f.sort === 'rlow') return a.rent - b.rent; if (f.sort === 'rhigh') return b.rent - a.rent; return b.createdAt - a.createdAt; });
     return out;
   }
   function renderRentals() {
     var c = { all: S.rentals.length, available: 0, rented: 0, na: 0 }, st = $('rstats'); st.textContent = '';
+    renderFinder($('find-rentals'), S.rentals);
     S.rentals.forEach(function (r) { c[r.status]++; });
     if (S.rentals.length) [['Available', c.available], ['Rented', c.rented]].forEach(function (p) { st.appendChild(h('span', null, h('b', { text: String(p[1]) }), p[0])); });
     var t = $('rtypes'); t.textContent = '';
@@ -906,8 +942,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
       return;
     }
     var items = visibleR();
-    if (!items.length) { box.appendChild(h('div', { class: 'empty', text: 'No rentals match this filter.' })); return; }
-    var g = h('div', { class: 'grid' }); items.forEach(function (r) { g.appendChild(rcard(r)); }); box.appendChild(g);
+    showResults(box, items, rcard, 'No rentals match this filter.');
   }
   function rooms(r) { return ((r.beds ? r.beds + ' bed' : '') + (r.baths ? (r.beds ? ' · ' : '') + r.baths + ' bath' : '')) || 'Not stated'; }
   function rcard(r) {
@@ -918,7 +953,8 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
       if (r.photos.length > 1) tags.appendChild(h('span', { text: r.photos.length + ' photos' }));
       kids.push(h('button', { class: 'cover', type: 'button', 'aria-label': 'View photos of ' + r.title, onclick: function () { openViewer(r, 0); } }, h('img', { src: imgUrl(r.photos[0] || r.pano.id), alt: '', loading: 'lazy' }), tags));
     }
-    kids.push(h('div', { class: 'card-h' }, h('div', { style: 'min-width:0' }, h('h3', { text: r.title }), h('div', { class: 'sub', text: [r.type, r.area].filter(Boolean).join(' · ') })), h('span', { class: 'st ' + r.status, text: RSTATUS[r.status] })));
+    kids.push(h('div', { class: 'card-h' }, h('div', { style: 'min-width:0' }, h('h3', { text: r.title }), h('div', { class: 'sub', text: [r.type, r.area].filter(Boolean).join(' · ') })), h('div', { class: 'hd-r' }, h('span', { class: 'st ' + r.status, text: RSTATUS[r.status] }), heartBtn(r))));
+    var rbg = badgeRow(r, r.rent); if (rbg) kids.push(rbg);
     kids.push(h('div', { class: 'price', title: '₹' + inr(r.rent) }, short(r.rent), h('span', { text: ' / month', style: 'font-size:15px;font-family:var(--font-body);font-weight:500;color:var(--muted)' })));
     var ll = logLine(r.priceLog, r.rent); if (ll) kids.push(ll);
     var kr = kmLine(r); if (kr) kids.push(kr);
@@ -1306,6 +1342,10 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
     fillSelect($('r-furn'), FURN.map(function (x) { return [x, x]; })); fillSelect($('r-tenants'), TENANTS.map(function (x) { return [x, x]; }));
     $('btn-save').textContent = pl ? 'Save listing' : 'Save rental';
   }
+  function renderTagsForm() {
+    var b = $('f-tags'); b.textContent = '';
+    PTAGS.forEach(function (t) { var on = F.tags.indexOf(t) >= 0; b.appendChild(h('button', { class: 'chip', type: 'button', 'aria-pressed': String(on), onclick: function () { var i = F.tags.indexOf(t); if (i >= 0) F.tags.splice(i, 1); else F.tags.push(t); renderTagsForm(); } }, t)); });
+  }
   function renderAmen() {
     var b = $('r-amen'); b.textContent = '';
     AMEN.forEach(function (a) { var on = F.amen.indexOf(a) >= 0; b.appendChild(h('button', { class: 'chip', type: 'button', 'aria-pressed': String(on), onclick: function () { var i = F.amen.indexOf(a); if (i >= 0) F.amen.splice(i, 1); else F.amen.push(a); renderAmen(); } }, a)); });
@@ -1313,11 +1353,12 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   function openSheet(it, opts) {
     opts = opts || {};
     var src = it || opts.template || null, mode = opts.mode || (src && src.kind === 'rental' ? 'rental' : 'plot');
-    F = { photos: [], fresh: [], removed: [], shape: [], busy: 0, editing: it || null, pano: null, layoutId: opts.layoutId || '', mode: mode, amen: [] };
+    F = { photos: [], fresh: [], removed: [], shape: [], busy: 0, editing: it || null, pano: null, layoutId: opts.layoutId || '', mode: mode, amen: [], tags: [] };
     $('form').reset(); $('form-err').textContent = ''; $('up-msg').textContent = ''; setLocMsg('', '');
     setMode(mode);
     $('sheet-title').textContent = (it ? 'Edit ' : 'Add ') + (mode === 'rental' ? 'rental' : 'listing');
     if (src) {
+      F.tags = (src.tags || []).slice();
       $('f-area').value = src.area; if (src.type) $('f-type').value = src.type;
       $('f-lat').value = src.lat != null ? src.lat.toFixed(6) : ''; $('f-lng').value = src.lng != null ? src.lng.toFixed(6) : '';
       if (mode === 'plot') {
@@ -1334,7 +1375,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
     }
     $('status-wrap').hidden = !!(it && mode === 'plot' && isSold(it));
     $('media-box').hidden = !S.assets; $('f-layout').disabled = false;
-    fillLayoutSelect(); renderMedia(); renderAmen(); hints(); updateVerify();
+    fillLayoutSelect(); renderMedia(); renderAmen(); renderTagsForm(); hints(); updateVerify();
     $('sheet').hidden = false; setTimeout(function () { if (!$('sheet').contains(document.activeElement)) $('f-title').focus(); }, 30);
   }
   function closeSheet() {
@@ -1350,7 +1391,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
     if (!rental && !(size > 0)) { err.textContent = 'Enter the plot size.'; $('f-size').focus(); return; }
     if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) { err.textContent = 'Add a valid GPS location: paste a Google Maps link or enter latitude and longitude.'; $('f-loc').focus(); return; }
     var base = { title: title, area: $('f-area').value.trim(), type: $('f-type').value, lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6, notes: $('f-notes').value.trim(),
-      updatedAt: Date.now(), updatedBy: S.me || '', photos: F.photos.slice(), pano: F.pano }, data, coll;
+      updatedAt: Date.now(), updatedBy: S.me || '', photos: F.photos.slice(), pano: F.pano, tags: F.tags.slice() }, data, coll;
     if (rental) {
       var av = $('r-avail').value ? parseDay($('r-avail').value) : 0;
       data = Object.assign(base, { status: $('f-status').value, rent: price, deposit: parsePrice($('r-deposit').value) || 0, beds: parseInt($('r-beds').value, 10) || 0, baths: parseInt($('r-baths').value, 10) || 0,
@@ -1391,12 +1432,190 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
 
   /* ---------- sales and commission ---------- */
   function rad(x) { return x * Math.PI / 180; }
+  function nearOn() { return S.nb.on && !!S.nb.c; }
+  function refPt() { return nearOn() ? S.nb.c : S.here; }
   function dkm(o) {
-    if (!S.here || o.lat == null) return 1e9;
-    var dLat = rad(o.lat - S.here.lat), dLng = rad(o.lng - S.here.lng), a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(rad(S.here.lat)) * Math.cos(rad(o.lat)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    var c = refPt(); if (!c || o.lat == null) return 1e9;
+    var dLat = rad(o.lat - c.lat), dLng = rad(o.lng - c.lng), a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(rad(c.lat)) * Math.cos(rad(o.lat)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
     return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
-  function kmLine(o) { if (!S.here) return null; var d = dkm(o); return d < 1e8 ? h('div', { class: 'who', text: (d < 10 ? d.toFixed(1) : Math.round(d)) + ' km from you (straight line)' }) : null; }
+  function kmLine(o) { var c = refPt(); if (!c) return null; var d = dkm(o); return d < 1e8 ? h('div', { class: 'who', text: (d < 10 ? d.toFixed(1) : Math.round(d)) + ' km from ' + (nearOn() ? S.nb.c.label : 'you') + ' (straight line)' }) : null; }
+
+  /* ---------- saved, badges ---------- */
+  var SV = {}; try { SV = JSON.parse(localStorage.getItem('pr.saved') || '{}') || {}; } catch (e) { SV = {}; }
+  function toggleSaved(id) { if (SV[id]) delete SV[id]; else SV[id] = 1; try { localStorage.setItem('pr.saved', JSON.stringify(SV)); } catch (e) {} render(); }
+  function heartBtn(o) { var on = !!SV[o.id]; return h('button', { class: 'heart', type: 'button', 'aria-pressed': String(on), 'aria-label': (on ? 'Remove from saved: ' : 'Save: ') + o.title, onclick: function () { toggleSaved(o.id); } }, on ? '♥' : '♡'); }
+  function badgeRow(o, cur) {
+    var b = [], lg = o.priceLog;
+    if (o.createdAt && Date.now() - o.createdAt < 7 * 864e5) b.push(h('span', { class: 'bdg new', text: 'New' }));
+    if (lg && lg.length && lg[lg.length - 1].p > cur) b.push(h('span', { class: 'bdg cut', text: 'Price cut' }));
+    (o.tags || []).forEach(function (t) { b.push(h('span', { class: 'bdg', text: t })); });
+    return b.length ? h.apply(null, ['div', { class: 'bdgs' }].concat(b)) : null;
+  }
+
+  /* ---------- finder: areas, nearby, tags, list/map ---------- */
+  function normArea(a) { return String(a || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+  function areasOf(list) {
+    var m = {}, order = [];
+    list.forEach(function (o) { var k = normArea(o.area); if (!k || o.lat == null) return; if (!m[k]) { m[k] = { key: k, label: o.area.trim(), n: 0, lat: 0, lng: 0 }; order.push(k); } var a = m[k]; a.n++; a.lat += o.lat; a.lng += o.lng; });
+    return order.map(function (k) { var a = m[k]; return { key: k, label: a.label, n: a.n, lat: a.lat / a.n, lng: a.lng / a.n }; }).sort(function (a, b) { return b.n - a.n; });
+  }
+  function passFind(o) {
+    var nb = S.nb;
+    if (nb.saved && !SV[o.id]) return false;
+    if (nb.area && normArea(o.area) !== nb.area) return false;
+    if (nearOn() && dkm(o) > nb.r) return false;
+    for (var i = 0; i < nb.tags.length; i++) if ((o.tags || []).indexOf(nb.tags[i]) < 0) return false;
+    return true;
+  }
+  function fchip(label, on, fn, n) { return h('button', { class: 'chip', type: 'button', 'aria-pressed': String(!!on), onclick: fn }, label, n != null ? h('b', { text: String(n) }) : null); }
+  function useMyLoc() {
+    askHere(function () { S.nb.c = { lat: S.here.lat, lng: S.here.lng, label: 'you' }; S.nb.pick = false; render(); });
+    render();
+  }
+  function renderFinder(el, list) {
+    var sec = el.parentNode, isMap = S.nb.view === 'map';
+    sec.querySelector('.bar').hidden = isMap; sec.querySelector('.stats').hidden = isMap;
+    if (typing(el)) return; el.textContent = '';
+    var nb = S.nb, areas = areasOf(list);
+    var row = h('div', { class: 'chips scroll', role: 'group', 'aria-label': 'Area' });
+    row.appendChild(fchip('All areas', !nb.on && !nb.area, function () { nb.on = false; nb.area = ''; render(); }));
+    row.appendChild(fchip('◎ Nearby', nb.on, function () { nb.on = !nb.on; nb.area = ''; if (nb.on && !nb.c) useMyLoc(); else render(); }));
+    areas.slice(0, 15).forEach(function (a) { row.appendChild(fchip(a.label, !nb.on && nb.area === a.key, function () { nb.on = false; nb.area = nb.area === a.key ? '' : a.key; render(); }, a.n)); });
+    el.appendChild(row);
+    if (nb.on) {
+      var p = h('div', { class: 'box' });
+      p.appendChild(h('b', { text: nb.c ? 'Within ' + nb.r + ' km of ' + nb.c.label : 'Choose the spot to search around' }));
+      var rr = h('div', { class: 'chips', role: 'group', 'aria-label': 'Radius', style: 'margin-top:8px' });
+      RADII.forEach(function (r) { rr.appendChild(fchip(r + ' km', nb.r === r, function () { nb.r = r; render(); })); });
+      p.appendChild(rr);
+      p.appendChild(h('div', { class: 'acts-row', style: 'margin-top:8px' },
+        h('button', { class: 'btn small', type: 'button', onclick: function () { S.here = null; useMyLoc(); } }, 'Use my location'),
+        h('button', { class: 'btn small', type: 'button', 'aria-expanded': String(nb.pick), onclick: function () { nb.pick = !nb.pick; render(); } }, 'Pick a place')));
+      if (nb.pick) {
+        var all = areasOf(S.items.concat(S.rentals));
+        var inp = h('input', { class: 'inl', placeholder: 'Paste a Google Maps link or 30.31, 78.03', 'aria-label': 'Place link or coordinates', style: 'width:100%' });
+        var sel = h('select', { class: 'inl', 'aria-label': 'Known area' }, h('option', { value: '', text: 'or choose an area' }));
+        all.forEach(function (a) { sel.appendChild(h('option', { value: a.key, text: a.label })); });
+        var msg = h('div', { class: 'msg bad', role: 'alert' });
+        var set = function () {
+          var a = all.filter(function (x) { return x.key === sel.value; })[0];
+          if (a) { nb.c = { lat: a.lat, lng: a.lng, label: a.label }; nb.pick = false; render(); return; }
+          var r = parseLocation(inp.value);
+          if (r.error) { msg.textContent = r.error === 'short' ? 'Short links cannot be read. Open the link in Google Maps, copy the full address-bar link or the coordinates, and paste that.' : 'Could not find coordinates in that. Paste a full Google Maps link or numbers like 30.31, 78.03.'; return; }
+          nb.c = { lat: r.lat, lng: r.lng, label: 'the chosen spot' }; nb.pick = false; render();
+        };
+        inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') set(); });
+        p.appendChild(h('div', { style: 'display:grid;gap:8px;margin-top:10px' }, h('div', { class: 'hint', text: 'For a client who is somewhere else: paste the pin they sent you, or choose an area.' }), inp, sel, msg,
+          h('div', { class: 'acts-row' }, h('button', { class: 'btn small primary', type: 'button', onclick: set }, 'Search around this place'))));
+      }
+      el.appendChild(p);
+    }
+    var tr = h('div', { class: 'chips scroll', role: 'group', 'aria-label': 'Preferences' });
+    tr.appendChild(fchip('♥ Saved', nb.saved, function () { nb.saved = !nb.saved; render(); }, list.filter(function (o) { return SV[o.id]; }).length));
+    PTAGS.forEach(function (t) { tr.appendChild(fchip(t, nb.tags.indexOf(t) >= 0, function () { var i = nb.tags.indexOf(t); if (i >= 0) nb.tags.splice(i, 1); else nb.tags.push(t); render(); })); });
+    el.appendChild(tr);
+    el.appendChild(h('div', null, h('div', { class: 'seg', role: 'group', 'aria-label': 'View' },
+      h('button', { type: 'button', 'aria-pressed': String(nb.view === 'list'), onclick: function () { nb.view = 'list'; render(); } }, 'List'),
+      h('button', { type: 'button', 'aria-pressed': String(nb.view === 'map'), onclick: function () { nb.view = 'map'; render(); } }, 'Map'))));
+  }
+  function showResults(box, items, cardFn, emptyMsg) {
+    if (S.nb.view !== 'map') {
+      if (!items.length) { box.appendChild(h('div', { class: 'empty', text: emptyMsg + (nearOn() ? ' Try a bigger radius.' : '') })); return; }
+      var g = h('div', { class: 'grid' }); items.forEach(function (o) { g.appendChild(cardFn(o)); }); box.appendChild(g); return;
+    }
+    if (!MV.el) mvBuild();
+    box.appendChild(MV.el); mvSet(items);
+    var sel = items.filter(function (o) { return o.id === MV.sel; })[0];
+    box.appendChild(h('div', { class: 'who', style: 'margin:10px 0', text: items.length ? items.length + (items.length === 1 ? ' property' : ' properties') + ' on the map. ' + (sel ? '' : 'Tap a price to see the details.') : emptyMsg }));
+    if (sel) box.appendChild(h('div', { class: 'grid' }, cardFn(sel)));
+  }
+
+  /* ---------- map (OpenStreetMap tiles) ---------- */
+  var MV = { el: null, tl: null, ov: null, lat: 30.32, lng: 78.03, z: 10, items: [], key: '', sel: '', tiles: {}, wt: 0 };
+  function mvProj(lat, lng, z) { var sc = 256 * Math.pow(2, z), sn = Math.sin(lat * Math.PI / 180); return [(lng + 180) / 360 * sc, (0.5 - Math.log((1 + sn) / (1 - sn)) / (4 * Math.PI)) * sc]; }
+  function mvUnproj(x, y, z) { var sc = 256 * Math.pow(2, z), n = Math.PI - 2 * Math.PI * y / sc; return [180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))), x / sc * 360 - 180]; }
+  function mvSize() { return [MV.el.clientWidth || 360, MV.el.clientHeight || 420]; }
+  function mvZoom(d) { var z = Math.max(4, Math.min(18, MV.z + d)); if (z === MV.z) return; MV.z = z; mvDraw(); }
+  function mvBuild() {
+    var el = h('div', { class: 'mv', role: 'application', 'aria-label': 'Map of properties' });
+    MV.tl = h('div', { class: 'mv-l' }); MV.ov = h('div', { class: 'mv-l' });
+    el.appendChild(MV.tl); el.appendChild(MV.ov);
+    el.appendChild(h('div', { class: 'mv-ctl' }, h('button', { type: 'button', 'aria-label': 'Zoom in', onclick: function () { mvZoom(1); } }, '+'), h('button', { type: 'button', 'aria-label': 'Zoom out', onclick: function () { mvZoom(-1); } }, '−')));
+    el.appendChild(h('a', { class: 'mv-att', href: 'https://www.openstreetmap.org/copyright', target: '_blank', rel: 'noopener noreferrer' }, '© OpenStreetMap'));
+    MV.el = el;
+    var ptrs = {}, pinch = 0;
+    function dist() { var k = Object.keys(ptrs); return k.length < 2 ? 0 : Math.hypot(ptrs[k[0]][0] - ptrs[k[1]][0], ptrs[k[0]][1] - ptrs[k[1]][1]); }
+    el.addEventListener('pointerdown', function (e) { if (e.target.closest('button,a')) return; ptrs[e.pointerId] = [e.clientX, e.clientY]; pinch = dist(); e.preventDefault(); });
+    window.addEventListener('pointermove', function (e) {
+      var p = ptrs[e.pointerId]; if (!p) return;
+      if (Object.keys(ptrs).length === 1) {
+        var c = mvProj(MV.lat, MV.lng, MV.z), ll = mvUnproj(c[0] - (e.clientX - p[0]), c[1] - (e.clientY - p[1]), MV.z);
+        MV.lat = Math.max(-84, Math.min(84, ll[0])); MV.lng = ll[1]; ptrs[e.pointerId] = [e.clientX, e.clientY]; mvDraw();
+      } else {
+        ptrs[e.pointerId] = [e.clientX, e.clientY]; var d = dist();
+        if (pinch && d > pinch * 1.5) { mvZoom(1); pinch = d; } else if (pinch && d < pinch / 1.5) { mvZoom(-1); pinch = d; }
+      }
+    });
+    function up(e) { delete ptrs[e.pointerId]; pinch = 0; }
+    window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    el.addEventListener('wheel', function (e) { e.preventDefault(); var now = Date.now(); if (now - MV.wt < 250) return; MV.wt = now; mvZoom(e.deltaY < 0 ? 1 : -1); }, { passive: false });
+  }
+  function mvFit() {
+    var sz = mvSize(), w = sz[0], hh = sz[1], z;
+    if (nearOn()) {
+      MV.lat = S.nb.c.lat; MV.lng = S.nb.c.lng;
+      for (z = 16; z > 4; z--) { if (2 * S.nb.r * 1000 / (156543.03392 * Math.cos(rad(MV.lat)) / Math.pow(2, z)) <= Math.min(w, hh) - 30) break; }
+      MV.z = z; return;
+    }
+    var pts = MV.items; if (!pts.length) { MV.z = 10; return; }
+    var la = pts.map(function (o) { return o.lat; }), lo = pts.map(function (o) { return o.lng; });
+    var n = Math.max.apply(null, la), s0 = Math.min.apply(null, la), e = Math.max.apply(null, lo), w0 = Math.min.apply(null, lo);
+    for (z = 16; z > 4; z--) { var a = mvProj(n, w0, z), b = mvProj(s0, e, z); if (b[0] - a[0] <= w - 90 && b[1] - a[1] <= hh - 90) break; }
+    MV.z = z; MV.lat = (n + s0) / 2; MV.lng = (e + w0) / 2;
+  }
+  function mvSet(items) {
+    MV.items = items;
+    var key = S.tab + '|' + items.map(function (o) { return o.id; }).join(',') + '|' + (nearOn() ? S.nb.c.lat + ',' + S.nb.c.lng + ',' + S.nb.r : '');
+    if (key !== MV.key) { MV.key = key; mvFit(); }
+    mvDraw();
+  }
+  function mvDraw() {
+    var sz = mvSize(), w = sz[0], hh = sz[1], z = MV.z, c = mvProj(MV.lat, MV.lng, z), ox = c[0] - w / 2, oy = c[1] - hh / 2, n = Math.pow(2, z), want = {};
+    for (var tx = Math.floor(ox / 256); tx <= Math.floor((ox + w) / 256); tx++) for (var ty = Math.floor(oy / 256); ty <= Math.floor((oy + hh) / 256); ty++) {
+      if (ty < 0 || ty >= n) continue;
+      var k = z + '/' + (((tx % n) + n) % n) + '/' + ty, id = k + '@' + tx, im = MV.tiles[id];
+      if (!im) { im = MV.tiles[id] = h('img', { alt: '', draggable: 'false', src: 'https://tile.openstreetmap.org/' + k + '.png' }); MV.tl.appendChild(im); }
+      im.style.left = Math.round(tx * 256 - ox) + 'px'; im.style.top = Math.round(ty * 256 - oy) + 'px'; want[id] = 1;
+    }
+    Object.keys(MV.tiles).forEach(function (id) { if (!want[id]) { MV.tiles[id].remove(); delete MV.tiles[id]; } });
+    var ov = MV.ov; ov.textContent = '';
+    if (nearOn()) {
+      var cc = mvProj(S.nb.c.lat, S.nb.c.lng, z), rp = S.nb.r * 1000 / (156543.03392 * Math.cos(rad(S.nb.c.lat)) / n);
+      ov.appendChild(h('div', { class: 'mv-circ', style: 'left:' + (cc[0] - ox) + 'px;top:' + (cc[1] - oy) + 'px;width:' + 2 * rp + 'px;height:' + 2 * rp + 'px' }));
+      ov.appendChild(h('div', { class: 'mv-me', style: 'left:' + (cc[0] - ox) + 'px;top:' + (cc[1] - oy) + 'px' }));
+    }
+    var cl = [];
+    MV.items.forEach(function (o) {
+      var p = mvProj(o.lat, o.lng, z), x = p[0] - ox, y = p[1] - oy, hit = null;
+      if (x < -60 || y < -40 || x > w + 60 || y > hh + 40) return;
+      if (o.id !== MV.sel) for (var i = 0; i < cl.length; i++) if (!cl[i].sel && Math.abs(cl[i].x - x) < 54 && Math.abs(cl[i].y - y) < 30) { hit = cl[i]; break; }
+      if (hit) { hit.items.push(o); hit.x = (hit.x * (hit.items.length - 1) + x) / hit.items.length; hit.y = (hit.y * (hit.items.length - 1) + y) / hit.items.length; }
+      else cl.push({ x: x, y: y, items: [o], sel: o.id === MV.sel });
+    });
+    cl.forEach(function (g) {
+      var o = g.items[0], st = 'left:' + Math.round(g.x) + 'px;top:' + Math.round(g.y) + 'px';
+      if (g.items.length > 1 && z < 18) {
+        ov.appendChild(h('button', { class: 'mv-pin cl', type: 'button', style: st, 'aria-label': g.items.length + ' properties here, zoom in', onclick: function () { var ll = mvUnproj(g.x + ox, g.y + oy, z); MV.lat = ll[0]; MV.lng = ll[1]; mvZoom(2); } }, String(g.items.length)));
+        return;
+      }
+      g.items.forEach(function (it) {
+        var live = it.kind === 'rental' ? it.status === 'available' : (it.status === 'available' || it.status === 'negotiating');
+        ov.appendChild(h('button', { class: 'mv-pin' + (it.id === MV.sel ? ' sel' : live ? '' : ' off'), type: 'button', style: st, 'aria-label': it.title, onclick: function () { MV.sel = it.id; render(); } }, short(it.kind === 'rental' ? it.rent : it.price)));
+      });
+    });
+  }
+
   function askHere(then) {
     if (S.here) { then(); return; }
     if (!navigator.geolocation) { toast('This phone cannot share its location here.'); return; }
@@ -1406,7 +1625,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   function phoneOf(uid) { var p = S.partners[uid]; return p && p.phone ? p.phone : ''; }
   function listerBtns(o) {
     var out = [], ph = phoneOf(o.by); if (!ph || o.by === S.me) return out;
-    var wl = waLink(ph, 'Hi ' + nameOf(o.by) + ', about ' + o.title + ' on Plot Register.');
+    var wl = waLink(ph, 'Hi ' + nameOf(o.by) + ', about ' + o.title + ' on Bahi-Khata Property.');
     var d = ph.replace(/[^0-9+]/g, '');
     out.push(h('a', { class: 'btn small', href: 'tel:' + d }, 'Call ' + nameOf(o.by).split(' ')[0]));
     if (wl) out.push(h('a', { class: 'btn small', href: wl, target: '_blank', rel: 'noopener noreferrer' }, 'WhatsApp'));
@@ -1584,7 +1803,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
   function renderGate() {
     var v = $('v-gate'); if (v.firstChild) return;
     var box = h('div', { class: 'gate' }); v.appendChild(box);
-    box.appendChild(h('h1', { text: 'Plot Register', style: 'font-size:30px' }));
+    box.appendChild(h('h1', { text: 'Bahi-Khata Property', style: 'font-size:30px' }));
     box.appendChild(h('h2', { text: 'Welcome' }));
     box.appendChild(h('p', { text: 'Tell us who you are. Your name shows on the listings you add, and your phone lets teammates call you. You do this once.' }));
     profileForm(box, null, null);
@@ -1638,6 +1857,7 @@ if (typeof module !== 'undefined') module.exports = { parseLocation: parseLocati
       h('button', { class: 'btn primary', type: 'button', onclick: function () { openSheet(null); } }, '+ Plot'),
       h('button', { class: 'btn primary', type: 'button', onclick: function () { openSheet(null, { mode: 'rental' }); } }, '+ Rental'),
       h('button', { class: 'btn primary', type: 'button', onclick: function () { openLead(null); } }, '+ Lead')));
+    v.appendChild(h('div', { class: 'qa' }, h('button', { class: 'btn', type: 'button', onclick: function () { S.nb.on = true; S.nb.area = ''; go('plots'); if (!S.nb.c) useMyLoc(); } }, '\u25CE Property near me or near a client')));
     var res = h('div'); v.appendChild(searchBox(res)); v.appendChild(res);
     var ios = /iPhone|iPad/.test(navigator.userAgent) && !(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
     var hideTip = false; try { hideTip = localStorage.getItem('pr.tip') === '1'; } catch (e) {}

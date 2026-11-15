@@ -1,6 +1,6 @@
-/* Plot Register service worker: caches the app shell for offline start, and serves _blob/<id> (photos, maps, documents) from a local cache,
+/* Bahi-Khata Property service worker: caches the app shell for offline start, and serves _blob/<id> (photos, maps, documents) from a local cache,
    asking the open page to fetch them from the backend the first time. */
-var SHELL = 'pr-shell-v2', BLOBS = 'pr-blobs-v1';
+var SHELL = 'pr-shell-v3', BLOBS = 'pr-blobs-v1';
 var FILES = ['./', 'index.html', 'config.js', 'shim.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(SHELL).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) {

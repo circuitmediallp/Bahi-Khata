@@ -1,4 +1,4 @@
-/* Plot Register web backend: replaces the Claude runtime (db, user, assets, downloads) with an access-code login + the Apps Script API. */
+/* Bahi-Khata Property web backend: replaces the Claude runtime (db, user, assets, downloads) with an access-code login + the Apps Script API. */
 (function () {
   var C = window.PR_CONFIG || {};
   var store = {}, ver = 0, me = null, listeners = [], synced = false, writeSeq = 0, inflight = 0;
@@ -15,7 +15,7 @@
     if (!overlay) {
       overlay = document.createElement('div'); overlay.id = 'pr-login';
       overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:var(--bg,#EEF1EC);color:var(--ink,#14231D);display:grid;place-content:center;gap:14px;text-align:center;padding:24px;font-family:system-ui,sans-serif';
-      overlay.innerHTML = '<h1 style="margin:0;font-size:30px">Plot Register</h1><p style="margin:0;color:var(--muted,#566860)">Enter the access code you were given.</p>' +
+      overlay.innerHTML = '<h1 style="margin:0;font-size:30px">Bahi-Khata Property</h1><p style="margin:0;color:var(--muted,#566860)">Enter the access code you were given.</p>' +
         '<input id="pr-code" type="password" autocomplete="off" autocapitalize="off" placeholder="Access code" style="font-size:18px;padding:12px 14px;border-radius:10px;border:1px solid var(--line,#D3DACF);text-align:center;min-height:44px">' +
         '<button id="pr-go" type="button" style="font-size:16px;font-weight:600;padding:12px;border:0;border-radius:10px;background:var(--pine,#2F5D4B);color:#fff;min-height:44px">Continue</button><p id="pr-err" style="margin:0;color:#A3362E;min-height:1em"></p>';
       document.body.appendChild(overlay);
